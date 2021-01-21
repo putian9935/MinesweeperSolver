@@ -5,16 +5,18 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import win32api 
 
+
 class Solver:
     colors = {'line': (128, 128, 128), 'unopened':(198,198,198), 'background': (196, 196, 196), 1: (0, 0, 255), 2: (0, 128, 0), 3: (255, 0, 0), 
     4: (0, 0, 128), 5: (128, 0, 0), 6: (0, 128, 128), 7: (0, 0, 0), 8: (128, 128, 128)}  # colors corresponding to different number
 
     def __init__(self,):
-        # grab.makeChromeFront()
+        # 
         self.bbox = grab.getBoxCoordinates()
         # print(self.bbox)
-        # self.bbox = (795.0, 295.0, 2672.5, 1795.0)
-        # print(self.bbox)
+        # grab.makeChromeFront()
+        # self.bbox = (797.5, 375.0, 2675.0, 1642.5)
+        
         # self._takeSnapshot(fromClipboard=True)
         self._takeSnapshot()
         self._showSnapshot()
@@ -31,8 +33,12 @@ class Solver:
         self.state = -2*np.ones((self.v_size, self.h_size))  # initially, all states are unknown
         self.frontiers = []
 
+        self.openAscending = 1
+
 
     def solve(self):
+        
+        import pyautogui
         dirs = [(0,1),(0,-1),(1,1),(1,-1),(-1,1),(-1,-1),(-1,0),(1,0)]
         def _accumulateMines(i, j):
             ret = 0 
@@ -63,8 +69,9 @@ class Solver:
                         self.state[i+di, j+dj] = -1
 
         def _open(coord_lst, scale=2.5):
-            coord_lst = sorted(list(coord_lst), key=lambda _: _[1])
-            for i, j in coord_lst:
+            coord_lst = sorted(list(coord_lst), key=lambda _: self.openAscending * _[1])
+            self.openAscending *= -1
+            for i, j in reversed(coord_lst):
                 # bbox[0] is horizontal, bbox[1] is vertical
                 if self.state[i, j] != -2:
                     continue
@@ -72,12 +79,11 @@ class Solver:
                 real_y = self.bbox[1] + self.vert_cent[i] + self.vert_dim // 2  + self.vert_dim /5 * (np.random.rand()-.5)
 
                 
-                import pyautogui
-                pyautogui.moveTo((int(real_x), int(real_y)))
+                pyautogui.moveTo((int(real_x), int(real_y)),  pause=0.0)
                 pyautogui.click()
-                self._takeSnapshot()
-                self.getState()
-                win32api.Sleep(500+int(200*(np.random.rand()-.5)))
+                # self._takeSnapshot()
+                # self.getState()
+                # win32api.Sleep(100+int(100*(np.random.rand()-.5)))
             
         def _formAdjacentPairs():
             def isAdjacent(pt1, pt2):
@@ -202,7 +208,7 @@ class Solver:
                 
         
         
-        
+        attempt = 0
         while True:
             self._takeSnapshot()
             self.getState()
@@ -230,11 +236,17 @@ class Solver:
             if not to_be_opened:
                 _useFormula()
                 if not to_be_opened:
-                    print('Auto solve finished!')
+                    attempt += 1
+                    print('Auto solve failed at attempt #%d. ' % attempt)
+                else:
+                    attempt = 0
+                if attempt > 5:
                     break
+                    self._revealState()
 
             # self._revealToBeOpenedList(to_be_opened)
- 
+            if not self.frontiers:
+                break
             _open(to_be_opened)
 
                     
@@ -375,6 +387,8 @@ class Solver:
             ax.add_patch(rect)
         
         plt.show()
+
+
     def _revealMap(self):
         plt.figure()
         plt.imshow(self.pix, interpolation=None)
@@ -389,4 +403,21 @@ class Solver:
         plt.matshow(self.state)
         plt.show()
 
-Solver().solve()
+
+if __name__ == '__main__':
+    import cProfile, pstats, io
+    pr = cProfile.Profile()
+
+    s =  Solver()
+    # pr.enable()
+
+    s.solve()
+
+    '''
+    pr.disable()
+    s = io.StringIO()
+    sortby = 'cumulative'
+    ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+    ps.print_stats(.1)  # only 10 percent is more than enough
+    print(s.getvalue())
+    '''
