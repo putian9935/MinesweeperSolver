@@ -3,8 +3,6 @@ import PIL.ImageGrab
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-import win32api 
-
 
 class Solver:
     colors = {'line': (128, 128, 128), 'unopened':(198,198,198), 'background': (196, 196, 196), 1: (0, 0, 255), 2: (0, 128, 0), 3: (255, 0, 0), 
@@ -81,10 +79,10 @@ class Solver:
                 
                 pyautogui.moveTo((int(real_x), int(real_y)),  pause=0.0)
                 pyautogui.click()
-                # self._takeSnapshot()
-                # self.getState()
-                # win32api.Sleep(100+int(100*(np.random.rand()-.5)))
-            
+                self._takeSnapshot()
+                self.getState()
+                
+
         def _formAdjacentPairs():
             def isAdjacent(pt1, pt2):
                 return (abs(pt1[0] - pt2[0]) ==1 and pt1[1]==pt2[1]) or (abs(pt1[1] - pt2[1]) ==1 and pt1[0]==pt2[0])
