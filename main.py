@@ -3,7 +3,7 @@ import PIL.ImageGrab
 import numpy as np
 from visualization import Reveal
 import matplotlib.pyplot as plt
-
+from brute_force import BruteForceSolver
 
 class Solver:
     colors = {'line': (128, 128, 128), 'unopened': (198, 198, 198), 'background': (196, 196, 196), 1: (0, 0, 255), 2: (0, 128, 0), 3: (255, 0, 0),
@@ -28,8 +28,19 @@ class Solver:
 
         self.openAscending = 1
 
-    def solve(self):
+    def _checkMine(self, i, j):
+        if 0 <= i < self.v_size and 0 <= j < self.h_size:
+            if self.state[i, j] == -1:
+                return True
+        return False
 
+    def _checkUnopened(self, i, j):
+        if 0 <= i < self.v_size and 0 <= j < self.h_size:
+            if self.state[i, j] == -2:
+                return True
+        return False
+
+    def solve(self):
         import pyautogui
         dirs = [(0, 1), (0, -1), (1, 1), (1, -1),
                 (-1, 1), (-1, -1), (-1, 0), (1, 0)]
@@ -96,24 +107,12 @@ class Solver:
 
             return ret
 
-        def _checkMine(i, j):
-            if 0 <= i < self.v_size and 0 <= j < self.h_size:
-                if self.state[i, j] == -1:
-                    return True
-            return False
-
-        def _checkUnopened(i, j):
-            if 0 <= i < self.v_size and 0 <= j < self.h_size:
-                if self.state[i, j] == -2:
-                    return True
-            return False
-
         def _appendToBeOpenedListF(i, j):
-            if _checkUnopened(i, j):
+            if self._checkUnopened(i, j):
                 to_be_opened.add((i, j))
 
         def _labelUnopenedAsMineF(i, j):
-            if _checkUnopened(i, j):
+            if self._checkUnopened(i, j):
                 self.state[i, j] = -1
                 
                 
@@ -126,10 +125,10 @@ class Solver:
                 dx = p2[0] - p1[0]
                 dy = p2[1] - p1[1]
                 if dx == 0:
-                    m1 = _checkMine(p1[0]-1, p1[1] - dy) + _checkMine(p1[0], p1[1] - dy) + _checkMine(p1[0]+1, p1[1] - dy)
-                    m2 = _checkMine(p2[0]-1, p2[1] + dy) + _checkMine(p2[0], p2[1] + dy) + _checkMine(p2[0]+1, p2[1] + dy)
-                    u1 = _checkUnopened(p1[0]-1, p1[1] - dy) + _checkUnopened(p1[0], p1[1] - dy) + _checkUnopened(p1[0]+1, p1[1] - dy)
-                    u2 = _checkUnopened(p2[0]-1, p2[1] + dy) + _checkUnopened(p2[0], p2[1] + dy) + _checkUnopened(p2[0]+1, p2[1] + dy)
+                    m1 = self._checkMine(p1[0]-1, p1[1] - dy) + self._checkMine(p1[0], p1[1] - dy) + self._checkMine(p1[0]+1, p1[1] - dy)
+                    m2 = self._checkMine(p2[0]-1, p2[1] + dy) + self._checkMine(p2[0], p2[1] + dy) + self._checkMine(p2[0]+1, p2[1] + dy)
+                    u1 = self._checkUnopened(p1[0]-1, p1[1] - dy) + self._checkUnopened(p1[0], p1[1] - dy) + self._checkUnopened(p1[0]+1, p1[1] - dy)
+                    u2 = self._checkUnopened(p2[0]-1, p2[1] + dy) + self._checkUnopened(p2[0], p2[1] + dy) + self._checkUnopened(p2[0]+1, p2[1] + dy)
 
                     if m1 + self.state[p2] - self.state[p1] == m2 + u2:
                         
@@ -145,14 +144,14 @@ class Solver:
                             _appendToBeOpenedListF(p1[0], p1[1] - dy)
                             _appendToBeOpenedListF(p1[0]+1, p1[1] - dy)
                 else:
-                    m1 = _checkMine(
-                        p1[0]-dx, p1[1] - 1) + _checkMine(p1[0]-dx, p1[1]) + _checkMine(p1[0]-dx, p1[1] + 1)
-                    m2 = _checkMine(
-                        p2[0]+dx, p2[1] - 1) + _checkMine(p2[0]+dx, p2[1]) + _checkMine(p2[0]+dx, p2[1] + 1)
-                    u1 = _checkUnopened(p1[0]-dx, p1[1] - 1) + _checkUnopened(
-                        p1[0]-dx, p1[1]) + _checkUnopened(p1[0]-dx, p1[1] + 1)
-                    u2 = _checkUnopened(p2[0]+dx, p2[1] - 1) + _checkUnopened(
-                        p2[0]+dx, p2[1]) + _checkUnopened(p2[0]+dx, p2[1] + 1)
+                    m1 = self._checkMine(
+                        p1[0]-dx, p1[1] - 1) + self._checkMine(p1[0]-dx, p1[1]) + self._checkMine(p1[0]-dx, p1[1] + 1)
+                    m2 = self._checkMine(
+                        p2[0]+dx, p2[1] - 1) + self._checkMine(p2[0]+dx, p2[1]) + self._checkMine(p2[0]+dx, p2[1] + 1)
+                    u1 = self._checkUnopened(p1[0]-dx, p1[1] - 1) + self._checkUnopened(
+                        p1[0]-dx, p1[1]) + self._checkUnopened(p1[0]-dx, p1[1] + 1)
+                    u2 = self._checkUnopened(p2[0]+dx, p2[1] - 1) + self._checkUnopened(
+                        p2[0]+dx, p2[1]) + self._checkUnopened(p2[0]+dx, p2[1] + 1)
 
                     if m1 + self.state[p2] - self.state[p1] == u2 + m2:
                         if u2:
@@ -171,14 +170,14 @@ class Solver:
                 dx = p2[0] - p1[0]
                 dy = p2[1] - p1[1]
                 if dx == 0:
-                    m1 = _checkMine(p1[0]-1, p1[1] - dy) + _checkMine(p1[0],
-                                                                      p1[1] - dy) + _checkMine(p1[0]+1, p1[1] - dy)
-                    m2 = _checkMine(p2[0]-1, p2[1] + dy) + _checkMine(p2[0],
-                                                                      p2[1] + dy) + _checkMine(p2[0]+1, p2[1] + dy)
-                    u1 = _checkUnopened(p1[0]-1, p1[1] - dy) + _checkUnopened(
-                        p1[0], p1[1] - dy) + _checkUnopened(p1[0]+1, p1[1] - dy)
-                    u2 = _checkUnopened(p2[0]-1, p2[1] + dy) + _checkUnopened(
-                        p2[0], p2[1] + dy) + _checkUnopened(p2[0]+1, p2[1] + dy)
+                    m1 = self._checkMine(p1[0]-1, p1[1] - dy) + self._checkMine(p1[0],
+                                                                      p1[1] - dy) + self._checkMine(p1[0]+1, p1[1] - dy)
+                    m2 = self._checkMine(p2[0]-1, p2[1] + dy) + self._checkMine(p2[0],
+                                                                      p2[1] + dy) + self._checkMine(p2[0]+1, p2[1] + dy)
+                    u1 = self._checkUnopened(p1[0]-1, p1[1] - dy) + self._checkUnopened(
+                        p1[0], p1[1] - dy) + self._checkUnopened(p1[0]+1, p1[1] - dy)
+                    u2 = self._checkUnopened(p2[0]-1, p2[1] + dy) + self._checkUnopened(
+                        p2[0], p2[1] + dy) + self._checkUnopened(p2[0]+1, p2[1] + dy)
 
                     if m1 + self.state[p2] - self.state[p1] == m2 + u2:
                         
@@ -194,19 +193,16 @@ class Solver:
                             _appendToBeOpenedListF(p1[0], p1[1] - dy)
                             _appendToBeOpenedListF(p1[0]+1, p1[1] - dy)
                 else:
-                    m1 = _checkMine(
-                        p1[0]-dx, p1[1] - 1) + _checkMine(p1[0]-dx, p1[1]) + _checkMine(p1[0]-dx, p1[1] + 1)
-                    m2 = _checkMine(
-                        p2[0]+dx, p2[1] - 1) + _checkMine(p2[0]+dx, p2[1]) + _checkMine(p2[0]+dx, p2[1] + 1)
-                    u1 = _checkUnopened(p1[0]-dx, p1[1] - 1) + _checkUnopened(
-                        p1[0]-dx, p1[1]) + _checkUnopened(p1[0]-dx, p1[1] + 1)
-                    u2 = _checkUnopened(p2[0]+dx, p2[1] - 1) + _checkUnopened(
-                        p2[0]+dx, p2[1]) + _checkUnopened(p2[0]+dx, p2[1] + 1)
+                    m1 = self._checkMine(
+                        p1[0]-dx, p1[1] - 1) + self._checkMine(p1[0]-dx, p1[1]) + self._checkMine(p1[0]-dx, p1[1] + 1)
+                    m2 = self._checkMine(
+                        p2[0]+dx, p2[1] - 1) + self._checkMine(p2[0]+dx, p2[1]) + self._checkMine(p2[0]+dx, p2[1] + 1)
+                    u1 = self._checkUnopened(p1[0]-dx, p1[1] - 1) + self._checkUnopened(
+                        p1[0]-dx, p1[1]) + self._checkUnopened(p1[0]-dx, p1[1] + 1)
+                    u2 = self._checkUnopened(p2[0]+dx, p2[1] - 1) + self._checkUnopened(
+                        p2[0]+dx, p2[1]) + self._checkUnopened(p2[0]+dx, p2[1] + 1)
 
                     if m1 + self.state[p2] - self.state[p1] == u2 + m2:
-                        # print(u1, u2)
-                        # self._revealToBeOpenedList([p1, p2])
-
                         if u2:
                             _labelUnopenedAsMineF(p2[0]+dx, p2[1] - 1)
                             _labelUnopenedAsMineF(p2[0]+dx, p2[1])
@@ -242,6 +238,7 @@ class Solver:
             while tmp_frontiers:
                 self.frontiers.append(tmp_frontiers.pop())
 
+           
             if not to_be_opened:
                 _useFormula()
                 if not to_be_opened:
@@ -251,7 +248,11 @@ class Solver:
                 else:
                     attempt = 0
                 if attempt > 5:
-                    Reveal(self)._revealMines()
+                    # Reveal(self)._revealMines()
+                    bf_solver = BruteForceSolver(self)
+                    for i, j in bf_solver.mine_lst:
+                        self.state[i, j] = -1  # mark as mine
+                    _open(bf_solver.open_lst)
                     # break
 
             # Reveal(self)._revealList(to_be_opened, 'g')
